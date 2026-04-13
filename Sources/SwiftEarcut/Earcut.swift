@@ -6,24 +6,54 @@
 
 import simd
 
+// MARK: - Protocol
+
+/// Conform your type to this protocol to use it directly with `earcut`.
+public protocol PointProviding {
+    var point: SIMD2<Double> { get }
+}
+
+extension SIMD2: PointProviding where Scalar: BinaryFloatingPoint {
+    public var point: SIMD2<Double> { SIMD2<Double>(Double(x), Double(y)) }
+}
+
 // MARK: - Public API
 
-/// Triangulates a polygon (with optional holes) and returns triangle indices.
+/// Triangulates a polygon of `EarcutPoint`-conforming values.
 ///
-/// - Parameter polygon: An array of rings. The first ring is the outer boundary (clockwise),
-///   subsequent rings are holes (counter-clockwise). Each ring is an array of 2D points.
+/// - Parameter polygon: An array of rings. The first ring is the outer boundary,
+///   subsequent rings are holes. Each ring is an array of points.
 /// - Returns: An array of indices into the flattened vertex list, where every three consecutive
 ///   indices form a triangle.
-public func earcut(polygon: [[SIMD2<Double>]]) -> [UInt32] {
+public func earcut<P: PointProviding>(polygon: [[P]]) -> [UInt32] {
+    let converted = polygon.map { ring in ring.map { $0.point } }
     var ec = Earcut()
-    ec.run(polygon: polygon)
+    ec.run(polygon: converted)
     return ec.indices
 }
 
-/// Convenience overload accepting `SIMD2<Float>`.
-public func earcut(polygon: [[SIMD2<Float>]]) -> [UInt32] {
-    let converted = polygon.map { ring in ring.map { SIMD2<Double>(Double($0.x), Double($0.y)) } }
-    return earcut(polygon: converted)
+/// Triangulates a polygon using a key path to extract x/y coordinates from arbitrary element types.
+///
+/// - Parameters:
+///   - polygon: An array of rings. The first ring is the outer boundary,
+///     subsequent rings are holes.
+///   - x: Key path to the x coordinate.
+///   - y: Key path to the y coordinate.
+/// - Returns: An array of indices into the flattened vertex list, where every three consecutive
+///   indices form a triangle.
+public func earcut<T>(polygon: [[T]], x: KeyPath<T, Double>, y: KeyPath<T, Double>) -> [UInt32] {
+    let converted = polygon.map { ring in ring.map { SIMD2<Double>($0[keyPath: x], $0[keyPath: y]) } }
+    var ec = Earcut()
+    ec.run(polygon: converted)
+    return ec.indices
+}
+
+/// Float key path overload.
+public func earcut<T>(polygon: [[T]], x: KeyPath<T, Float>, y: KeyPath<T, Float>) -> [UInt32] {
+    let converted = polygon.map { ring in ring.map { SIMD2<Double>(Double($0[keyPath: x]), Double($0[keyPath: y])) } }
+    var ec = Earcut()
+    ec.run(polygon: converted)
+    return ec.indices
 }
 
 // MARK: - Implementation

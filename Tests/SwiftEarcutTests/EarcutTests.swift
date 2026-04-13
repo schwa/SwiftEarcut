@@ -158,6 +158,56 @@ struct EarcutTests {
         // n vertices → (n-2) triangles → 3*(n-2) indices
         #expect(indices.count == 3 * (n - 2))
     }
+
+    // MARK: - KeyPath API
+
+    @Test func keyPathAPI() {
+        struct Vertex {
+            var px: Double
+            var py: Double
+        }
+        let polygon: [[Vertex]] = [[
+            Vertex(px: 0, py: 0),
+            Vertex(px: 1, py: 0),
+            Vertex(px: 1, py: 1),
+            Vertex(px: 0, py: 1),
+        ]]
+        let indices = earcut(polygon: polygon, x: \.px, y: \.py)
+        #expect(indices.count == 6)
+    }
+
+    @Test func keyPathFloatAPI() {
+        struct Vertex {
+            var px: Float
+            var py: Float
+        }
+        let polygon: [[Vertex]] = [[
+            Vertex(px: 0, py: 0),
+            Vertex(px: 1, py: 0),
+            Vertex(px: 1, py: 1),
+            Vertex(px: 0, py: 1),
+        ]]
+        let indices = earcut(polygon: polygon, x: \.px, y: \.py)
+        #expect(indices.count == 6)
+    }
+
+    // MARK: - EarcutPoint protocol API
+
+    @Test func protocolAPI() {
+        struct MyPoint: PointProviding {
+            var lat: Double
+            var lon: Double
+            var point: SIMD2<Double> { SIMD2(lon, lat) }
+        }
+        let polygon: [[MyPoint]] = [[
+            MyPoint(lat: 0, lon: 0),
+            MyPoint(lat: 0, lon: 1),
+            MyPoint(lat: 1, lon: 1),
+            MyPoint(lat: 1, lon: 0),
+        ]]
+        let indices = earcut(polygon: polygon)
+        #expect(indices.count == 6)
+    }
 }
 
 private func cross2D(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double {
