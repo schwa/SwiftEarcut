@@ -1,8 +1,23 @@
 # SwiftEarcut
 
-A pure Swift port of [mapbox/earcut.hpp](https://github.com/mapbox/earcut.hpp) — a fast polygon triangulation library.
+Pure Swift polygon triangulation library — a port of [mapbox/earcut.hpp](https://github.com/mapbox/earcut.hpp).
 
 Takes a polygon (with optional holes) and produces triangle indices suitable for rendering with Metal, SceneKit, RealityKit, etc.
+
+## Platforms
+
+macOS 15+, iOS 18+, tvOS 18+, watchOS 11+, visionOS 2+
+
+## Installation
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/schwa/SwiftEarcut", from: "0.1.0"),
+],
+targets: [
+    .target(name: "MyTarget", dependencies: ["SwiftEarcut"]),
+]
+```
 
 ## Usage
 
@@ -94,16 +109,9 @@ func earcut<T, S: BinaryFloatingPoint>(polygon: [[T]], x: KeyPath<T, S>, y: KeyP
 
 Indices refer to the flattened vertex list (all rings concatenated). Every three consecutive indices form one triangle.
 
-## Adding to Your Project
+## License
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/schwa/SwiftEarcut", from: "0.1.0"),
-],
-targets: [
-    .target(name: "MyTarget", dependencies: ["SwiftEarcut"]),
-]
-```
+MIT
 
 ## Credits
 
