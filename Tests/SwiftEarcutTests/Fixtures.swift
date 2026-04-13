@@ -1,3 +1,4 @@
+// swiftlint:disable all
 // Auto-generated from mapbox/earcut.hpp test fixtures
 // Do not edit manually.
 

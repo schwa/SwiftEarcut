@@ -418,13 +418,12 @@ private struct Earcut {
         let my = m.y
 
         repeat {
-            if hx >= p.x && p.x >= mx && hx != p.x
-                && pointInTriangle(
-                    hy < my ? hx : qx, hy,
-                    mx, my,
-                    hy < my ? qx : hx, hy,
-                    p.x, p.y)
-            {
+            let inTriangle = pointInTriangle(
+                hy < my ? hx : qx, hy,
+                mx, my,
+                hy < my ? qx : hx, hy,
+                p.x, p.y)
+            if hx >= p.x && p.x >= mx && hx != p.x && inTriangle {
                 let tanCur = abs(hy - p.y) / (hx - p.x)
 
                 if locallyInside(p, hole)
@@ -532,9 +531,9 @@ private struct Earcut {
     }
 
     /// Z-order of a point given coords and the data bounding box.
-    private func zOrder(x x_: Double, y y_: Double) -> Int32 {
-        var x = Int32((x_ - minX) * invSize)
-        var y = Int32((y_ - minY) * invSize)
+    private func zOrder(x xCoord: Double, y yCoord: Double) -> Int32 {
+        var x = Int32((xCoord - minX) * invSize)
+        var y = Int32((yCoord - minY) * invSize)
 
         x = (x | (x << 8)) & 0x00FF00FF
         x = (x | (x << 4)) & 0x0F0F0F0F

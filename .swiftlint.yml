@@ -1,0 +1,29 @@
+excluded:
+  - .build
+  - Tests/SwiftEarcutTests/Fixtures.swift
+
+disabled_rules:
+  - trailing_comma
+  - blanket_disable_command
+
+identifier_name:
+  min_length: 1
+
+type_body_length:
+  warning: 600
+  error: 800
+
+file_length:
+  warning: 800
+  error: 1000
+
+function_body_length:
+  warning: 60
+  error: 80
+
+function_parameter_count:
+  warning: 8
+  error: 10
+
+large_tuple:
+  warning: 4

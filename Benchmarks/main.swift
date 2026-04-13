@@ -101,8 +101,8 @@ print("SwiftEarcut Benchmarks")
 print("======================\n")
 
 let configs: [(String, [[SIMD2<Double>]], Int)] = [
-    ("triangle (3v)", [[SIMD2(0,0), SIMD2(1,0), SIMD2(0,1)]], 100_000),
-    ("quad (4v)", [[SIMD2(0,0), SIMD2(1,0), SIMD2(1,1), SIMD2(0,1)]], 100_000),
+    ("triangle (3v)", [[SIMD2(0, 0), SIMD2(1, 0), SIMD2(0, 1)]], 100_000),
+    ("quad (4v)", [[SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, 1), SIMD2(0, 1)]], 100_000),
     ("circle 32v", makeCircle(n: 32), 50_000),
     ("circle 100v", makeCircle(n: 100), 20_000),
     ("circle 500v", makeCircle(n: 500), 5_000),
