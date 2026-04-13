@@ -195,9 +195,9 @@ struct EarcutTests {
 
     @Test func protocolAPI() {
         struct MyPoint: PointProviding {
-            var lat: Double
-            var lon: Double
-            var point: SIMD2<Double> { SIMD2(lon, lat) }
+            var lat: Float
+            var lon: Float
+            var point: SIMD2<Float> { SIMD2(lon, lat) }
         }
         let polygon: [[MyPoint]] = [[
             MyPoint(lat: 0, lon: 0),

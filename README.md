@@ -6,36 +6,95 @@ Takes a polygon (with optional holes) and produces triangle indices suitable for
 
 ## Usage
 
+### SIMD2 (Direct)
+
+Works out of the box with `SIMD2<Double>` and `SIMD2<Float>`:
+
 ```swift
 import SwiftEarcut
 import simd
 
-// Simple polygon
 let square: [[SIMD2<Double>]] = [[
-    SIMD2(0, 0),
-    SIMD2(1, 0),
-    SIMD2(1, 1),
-    SIMD2(0, 1),
+    SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, 1), SIMD2(0, 1),
 ]]
 let indices = earcut(polygon: square)
 // [0, 1, 2, 2, 3, 0] — two triangles
+```
 
-// Polygon with a hole
+### Polygon with Holes
+
+The first ring is the outer boundary; subsequent rings are holes:
+
+```swift
 let withHole: [[SIMD2<Double>]] = [
-    // Outer ring
-    [SIMD2(0, 0), SIMD2(10, 0), SIMD2(10, 10), SIMD2(0, 10)],
-    // Hole
-    [SIMD2(2, 2), SIMD2(2, 8), SIMD2(8, 8), SIMD2(8, 2)],
+    [SIMD2(0, 0), SIMD2(10, 0), SIMD2(10, 10), SIMD2(0, 10)],  // outer
+    [SIMD2(2, 2), SIMD2(2, 8), SIMD2(8, 8), SIMD2(8, 2)],      // hole
 ]
-let indices2 = earcut(polygon: withHole)
-// 24 indices — 8 triangles filling the area between the outer ring and the hole
+let indices = earcut(polygon: withHole)
+```
+
+### PointProviding Protocol
+
+Conform your own types to `PointProviding` to use them directly:
+
+```swift
+struct GeoCoord: PointProviding {
+    var lat: Float
+    var lon: Float
+    var point: SIMD2<Float> { SIMD2(lon, lat) }
+}
+
+let polygon: [[GeoCoord]] = [[
+    GeoCoord(lat: 0, lon: 0),
+    GeoCoord(lat: 0, lon: 1),
+    GeoCoord(lat: 1, lon: 1),
+    GeoCoord(lat: 1, lon: 0),
+]]
+let indices = earcut(polygon: polygon)
+```
+
+The associated `Scalar` type can be any `BinaryFloatingPoint & SIMDScalar` (e.g. `Float`, `Double`).
+
+### KeyPath API
+
+For types you don't own, use key paths to extract coordinates:
+
+```swift
+struct Vertex {
+    var px: Double
+    var py: Double
+}
+
+let polygon: [[Vertex]] = [[
+    Vertex(px: 0, py: 0),
+    Vertex(px: 1, py: 0),
+    Vertex(px: 1, py: 1),
+    Vertex(px: 0, py: 1),
+]]
+let indices = earcut(polygon: polygon, x: \.px, y: \.py)
+```
+
+Works with both `Float` and `Double` key paths.
+
+## API Reference
+
+```swift
+// PointProviding protocol — conform your types
+protocol PointProviding {
+    associatedtype Scalar: BinaryFloatingPoint & SIMDScalar
+    var point: SIMD2<Scalar> { get }
+}
+
+// Triangulate any PointProviding type (includes SIMD2<Float> and SIMD2<Double>)
+func earcut<P: PointProviding>(polygon: [[P]]) -> [UInt32]
+
+// Triangulate using key paths
+func earcut<T, S: BinaryFloatingPoint>(polygon: [[T]], x: KeyPath<T, S>, y: KeyPath<T, S>) -> [UInt32]
 ```
 
 Indices refer to the flattened vertex list (all rings concatenated). Every three consecutive indices form one triangle.
 
-A `SIMD2<Float>` overload is also available.
-
-## Adding to your project
+## Adding to Your Project
 
 ```swift
 dependencies: [
@@ -45,18 +104,6 @@ targets: [
     .target(name: "MyTarget", dependencies: ["SwiftEarcut"]),
 ]
 ```
-
-## API
-
-```swift
-func earcut(polygon: [[SIMD2<Double>]]) -> [UInt32]
-func earcut(polygon: [[SIMD2<Float>]]) -> [UInt32]
-```
-
-**Parameters:**
-- `polygon` — An array of rings. The first ring is the outer boundary, subsequent rings are holes.
-
-**Returns:** A flat array of vertex indices. Every three indices form a triangle.
 
 ## Credits
 
