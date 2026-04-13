@@ -14,8 +14,13 @@ let package = Package(
     products: [
         .library(name: "SwiftEarcut", targets: ["SwiftEarcut"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-collections", from: "1.1.0"),
+    ],
     targets: [
-        .target(name: "SwiftEarcut"),
+        .target(name: "SwiftEarcut", dependencies: [
+            .product(name: "HeapModule", package: "swift-collections"),
+        ]),
         .testTarget(name: "SwiftEarcutTests", dependencies: ["SwiftEarcut"]),
         .executableTarget(
             name: "Benchmarks",

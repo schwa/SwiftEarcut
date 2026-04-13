@@ -74,6 +74,27 @@ func makeGrid(nx: Int, ny: Int) -> [[SIMD2<Double>]] {
     return [ring]
 }
 
+func makeManyHoles(count: Int) -> [[SIMD2<Double>]] {
+    // Large outer ring with many small square holes arranged in a grid
+    let cols = Int(ceil(sqrt(Double(count))))
+    let size = Double(cols) * 3.0 + 1.0
+    let outer: [SIMD2<Double>] = [
+        SIMD2(0, 0), SIMD2(size, 0), SIMD2(size, size), SIMD2(0, size),
+    ]
+    var rings: [[SIMD2<Double>]] = [outer]
+    for i in 0..<count {
+        let row = Double(i / cols)
+        let col = Double(i % cols)
+        let x = col * 3.0 + 1.0
+        let y = row * 3.0 + 1.0
+        // Hole (counter-clockwise)
+        rings.append([
+            SIMD2(x, y), SIMD2(x, y + 1), SIMD2(x + 1, y + 1), SIMD2(x + 1, y),
+        ])
+    }
+    return rings
+}
+
 // MARK: - Main
 
 print("SwiftEarcut Benchmarks")
@@ -89,6 +110,8 @@ let configs: [(String, [[SIMD2<Double>]], Int)] = [
     ("circle 5000v", makeCircle(n: 5000), 200),
     ("circle+hole 200+100v", makeCircleWithHole(outer: 200, inner: 100), 5_000),
     ("circle+hole 1000+500v", makeCircleWithHole(outer: 1000, inner: 500), 500),
+    ("many holes 50", makeManyHoles(count: 50), 2_000),
+    ("many holes 200", makeManyHoles(count: 200), 500),
     ("grid 50×20 (1000v)", makeGrid(nx: 50, ny: 20), 2_000),
     ("grid 100×50 (5000v)", makeGrid(nx: 100, ny: 50), 200),
 ]

@@ -5,6 +5,7 @@
 // and produces a flat array of triangle vertex indices.
 
 import simd
+import HeapModule
 
 // MARK: - Protocol
 
@@ -353,21 +354,19 @@ private struct Earcut {
 
     /// Link every hole into the outer loop, producing a single-ring polygon without holes.
     private mutating func eliminateHoles(polygon: [[SIMD2<Double>]], outerNode: Node) -> Node {
-        var queue: [Node] = []
+        var heap = Heap<Node>()
 
         for i in 1..<polygon.count {
             if let list = linkedList(ring: polygon[i], clockwise: false) {
                 if list === list.next {
                     list.steiner = true
                 }
-                queue.append(getLeftmost(start: list))
+                heap.insert(getLeftmost(start: list))
             }
         }
 
-        queue.sort { $0.x < $1.x }
-
         var outer = outerNode
-        for hole in queue {
+        while let hole = heap.popMin() {
             outer = eliminateHole(hole: hole, outerNode: outer)
         }
 
@@ -745,6 +744,12 @@ private final class Node {
 extension Node: Equatable {
     static func == (lhs: Node, rhs: Node) -> Bool {
         lhs === rhs
+    }
+}
+
+extension Node: Comparable {
+    static func < (lhs: Node, rhs: Node) -> Bool {
+        lhs.x < rhs.x
     }
 }
 
