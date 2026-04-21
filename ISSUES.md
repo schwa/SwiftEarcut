@@ -18,10 +18,12 @@ Add a public API overload that accepts 3D polygons (`[[SIMD3<Float>]]`) and hand
 ## 2: Node retain cycles leak memory after triangulation
 
 +++
-status: new
+status: closed
 priority: high
 kind: bug
 created: 2026-04-21T07:19:14Z
+updated: 2026-04-21T07:33:31Z
+closed: 2026-04-21T07:33:31Z
 +++
 
 While profiling a consumer app with `leaks` (MallocStackLogging=1), 999 `Node` instances were reported as ROOT CYCLE leaks, traced back to `earcut(polygon:)` via `Mesh.triangulateFace` in SwiftMesh.

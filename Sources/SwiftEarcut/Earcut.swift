@@ -53,12 +53,33 @@ public func earcut<T, S: BinaryFloatingPoint>(polygon: [[T]], x: KeyPath<T, S>, 
     return ec.indices
 }
 
+// MARK: - Testing hooks
+
+/// Internal test helper: runs earcut on a polygon and returns a list of closures,
+/// each of which weakly references a `Node` that was allocated during
+/// triangulation. After this function returns, every closure should yield `nil`
+/// if nodes are being released correctly (no retain cycles). See issue #2.
+internal func _earcutCollectingWeakNodes(polygon: [[SIMD2<Double>]]) -> (indices: [UInt32], weakNodes: [() -> Node?]) {
+    var ec = Earcut()
+    var weakRefs: [() -> Node?] = []
+    ec._testingNodeSnapshot = { nodes in
+        weakRefs = nodes.map { node in { [weak node] in node } }
+    }
+    ec.run(polygon: polygon)
+    return (ec.indices, weakRefs)
+}
+
 // MARK: - Implementation
 
 private struct Earcut {
     var indices: [UInt32] = []
     private var vertices: Int = 0
     private var nodes: NodePool = NodePool()
+
+    /// Testing hook: if set, invoked with the live node storage just before the
+    /// pool is cleared, so tests can capture weak references to verify nodes
+    /// are released (see issue #2).
+    var _testingNodeSnapshot: (([Node]) -> Void)?
 
     private var hashing = false
     private var minX: Double = 0
@@ -80,6 +101,13 @@ private struct Earcut {
 
         nodes = NodePool(capacity: totalLen * 3 / 2)
         indices.reserveCapacity(totalLen + polygon[0].count)
+
+        // Always clear the node pool on exit to break linked-list retain cycles
+        // and release `Node` instances (see issue #2).
+        defer {
+            _testingNodeSnapshot?(nodes.allNodesForTesting)
+            nodes.clear()
+        }
 
         guard var outerNode = linkedList(ring: polygon[0], clockwise: true) else {
             return
@@ -113,7 +141,6 @@ private struct Earcut {
         }
 
         earcutLinked(ear: outerNode, pass: 0)
-        nodes.clear()
     }
 
     // MARK: - Linked list construction
@@ -718,7 +745,7 @@ private struct Earcut {
 
 // MARK: - Node
 
-private final class Node {
+internal final class Node {
     let i: Int
     let x: Double
     let y: Double
@@ -769,6 +796,19 @@ private struct NodePool {
     }
 
     mutating func clear() {
+        // Break retain cycles formed by the circular doubly-linked list pointers
+        // (`next`/`prev` and `nextZ`/`prevZ`) before releasing the nodes. Without
+        // this, ARC cannot reclaim the `Node` instances and they leak as root
+        // cycles. See issue #2.
+        for node in storage {
+            node.prev = nil
+            node.next = nil
+            node.prevZ = nil
+            node.nextZ = nil
+        }
         storage.removeAll(keepingCapacity: true)
     }
+
+    /// Testing-only accessor for the currently pooled nodes.
+    var allNodesForTesting: [Node] { storage }
 }
