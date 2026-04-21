@@ -14,7 +14,7 @@ struct LeakTests {
             SIMD2(10, 10),
             SIMD2(0, 10),
         ]]
-        let (indices, weakNodes) = _earcutCollectingWeakNodes(polygon: polygon)
+        let (indices, weakNodes) = earcutCollectingWeakNodes(polygon: polygon)
         #expect(!indices.isEmpty)
         #expect(!weakNodes.isEmpty)
         for ref in weakNodes {
@@ -39,7 +39,7 @@ struct LeakTests {
             hole.append(SIMD2(cos(-a) * 10, sin(-a) * 10))
         }
         let polygon = [outer, hole]
-        let (indices, weakNodes) = _earcutCollectingWeakNodes(polygon: polygon)
+        let (indices, weakNodes) = earcutCollectingWeakNodes(polygon: polygon)
         #expect(!indices.isEmpty)
         #expect(!weakNodes.isEmpty)
         for ref in weakNodes {

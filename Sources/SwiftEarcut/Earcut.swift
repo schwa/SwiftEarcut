@@ -59,10 +59,10 @@ public func earcut<T, S: BinaryFloatingPoint>(polygon: [[T]], x: KeyPath<T, S>, 
 /// each of which weakly references a `Node` that was allocated during
 /// triangulation. After this function returns, every closure should yield `nil`
 /// if nodes are being released correctly (no retain cycles). See issue #2.
-internal func _earcutCollectingWeakNodes(polygon: [[SIMD2<Double>]]) -> (indices: [UInt32], weakNodes: [() -> Node?]) {
+internal func earcutCollectingWeakNodes(polygon: [[SIMD2<Double>]]) -> (indices: [UInt32], weakNodes: [() -> Node?]) {
     var ec = Earcut()
     var weakRefs: [() -> Node?] = []
-    ec._testingNodeSnapshot = { nodes in
+    ec.testingNodeSnapshot = { nodes in
         weakRefs = nodes.map { node in { [weak node] in node } }
     }
     ec.run(polygon: polygon)
@@ -79,7 +79,7 @@ private struct Earcut {
     /// Testing hook: if set, invoked with the live node storage just before the
     /// pool is cleared, so tests can capture weak references to verify nodes
     /// are released (see issue #2).
-    var _testingNodeSnapshot: (([Node]) -> Void)?
+    var testingNodeSnapshot: (([Node]) -> Void)?
 
     private var hashing = false
     private var minX: Double = 0
@@ -105,7 +105,7 @@ private struct Earcut {
         // Always clear the node pool on exit to break linked-list retain cycles
         // and release `Node` instances (see issue #2).
         defer {
-            _testingNodeSnapshot?(nodes.allNodesForTesting)
+            testingNodeSnapshot?(nodes.allNodesForTesting)
             nodes.clear()
         }
 
