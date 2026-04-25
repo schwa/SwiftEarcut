@@ -67,3 +67,25 @@ STACK OF 999 INSTANCES OF 'ROOT CYCLE: <Node>':
 Option 2 is the safest one-line-ish fix. Option 3 is the principled long-term fix.
 
 ---
+
+## 3: Investigate thread-safety / shared mutable state
+
++++
+status: new
+priority: medium
+kind: task
+created: 2026-04-25T22:18:43Z
++++
+
+Downstream consumer (Vector, see Vector#3) reports non-deterministic triangulation results under parallel test execution. The Ellipse shape (CGPath(ellipseIn:) → 4 cubic arcs → flattened polygon) produces slightly different vertex/index ordering across runs when multiple test cases run concurrently, leading to pixel-level rasterization differences (PSNR variance 23–34 dB raw, 30–60 dB eroded vs CoreGraphics).
+
+Vector's own caches and dict-iteration order have been ruled out as the cause. The triangulator is the next likely culprit.
+
+Audit:
+- `static var` declarations.
+- `@_silgen_name` / C imports — does the underlying C earcut have static buffers?
+- Any module-level mutable arrays used as scratch space.
+
+Repro is in Vector#3: `for i in (seq 1 20); swift test; end` in Vector with parallel testing fails ~50% of the time on Ellipse.
+
+---
