@@ -71,10 +71,12 @@ Option 2 is the safest one-line-ish fix. Option 3 is the principled long-term fi
 ## 3: Investigate thread-safety / shared mutable state
 
 +++
-status: new
+status: closed
 priority: medium
 kind: task
 created: 2026-04-25T22:18:43Z
+updated: 2026-04-26T00:38:51Z
+closed: 2026-04-26T00:38:51Z
 +++
 
 Downstream consumer (Vector, see Vector#3) reports non-deterministic triangulation results under parallel test execution. The Ellipse shape (CGPath(ellipseIn:) → 4 cubic arcs → flattened polygon) produces slightly different vertex/index ordering across runs when multiple test cases run concurrently, leading to pixel-level rasterization differences (PSNR variance 23–34 dB raw, 30–60 dB eroded vs CoreGraphics).
@@ -100,5 +102,7 @@ Root cause: `Node: Comparable` defined `<` as `lhs.x < rhs.x` only — a partial
 Fix: extended `Node: Comparable` to a strict total order (x, then y, then vertex index i). All 17 tests pass.
 
 Note: this should be verified against the Vector#3 repro (`for i in (seq 1 20); swift test; end`) before fully closing.
+
+- `2026-04-26T00:38:51Z`: Fixed: extended Node: Comparable to a strict total order (x, y, i) so Heap<Node> in eliminateHoles pops deterministically for inputs with coincident leftmost x (e.g. symmetric ellipse rings). Full audit found no other shared mutable state.
 
 ---

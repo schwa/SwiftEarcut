@@ -774,8 +774,18 @@ extension Node: Equatable {
 }
 
 extension Node: Comparable {
+    /// Strict total order: primarily by `x`, then `y`, then vertex index `i`.
+    ///
+    /// A total order (rather than `lhs.x < rhs.x` alone) is required for
+    /// determinism when `Node` values are inserted into `Heap`. Equal keys
+    /// in a heap pop in unspecified order, which causes nondeterministic
+    /// hole-elimination ordering for inputs with symmetric leftmost
+    /// vertices (e.g. ellipses flattened to multiple rings sharing the
+    /// same leftmost x). See issue #3.
     static func < (lhs: Node, rhs: Node) -> Bool {
-        lhs.x < rhs.x
+        if lhs.x != rhs.x { return lhs.x < rhs.x }
+        if lhs.y != rhs.y { return lhs.y < rhs.y }
+        return lhs.i < rhs.i
     }
 }
 
