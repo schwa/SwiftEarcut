@@ -104,5 +104,11 @@ Fix: extended `Node: Comparable` to a strict total order (x, then y, then vertex
 Note: this should be verified against the Vector#3 repro (`for i in (seq 1 20); swift test; end`) before fully closing.
 
 - `2026-04-26T00:38:51Z`: Fixed: extended Node: Comparable to a strict total order (x, y, i) so Heap<Node> in eliminateHoles pops deterministically for inputs with coincident leftmost x (e.g. symmetric ellipse rings). Full audit found no other shared mutable state.
+- `2026-04-26T01:06:57Z`: Update from Vector#3/#6 investigation: confirmed that the input polygon to triangulation IS bit-identical across parallel runs (instrumented dump in Vector showed bytewise-identical contour for Ellipse), but triangulation output (vertex/index sums) varies. The deterministic-comparator fix landed on main but the Ellipse flake persists. This suggests there's still some other source of non-determinism in the triangulation step itself.
+
+Possibly worth checking:
+- Heap construction order if any structures use unordered keys.
+- Any Foundation Dictionary/Set used internally.
+- Any FP comparison sensitivity to evaluation order across tasks.
 
 ---
