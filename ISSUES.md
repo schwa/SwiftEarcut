@@ -88,4 +88,17 @@ Audit:
 
 Repro is in Vector#3: `for i in (seq 1 20); swift test; end` in Vector with parallel testing fails ~50% of the time on Ellipse.
 
+- `2026-04-26T00:37:13Z`: Audit complete. No shared mutable state found:
+
+- No `static var`/`static let` mutables
+- No C imports / `@_silgen_name` (pure Swift port)
+- No module-level scratch buffers
+- Each `earcut(...)` call owns its own `Earcut` struct + `NodePool`
+
+Root cause: `Node: Comparable` defined `<` as `lhs.x < rhs.x` only — a partial order. The single `Heap<Node>` in `eliminateHoles` (Earcut.swift:384) pops equal-key elements in unspecified order. For symmetric inputs like a flattened ellipse, multiple hole rings share the same leftmost x, so hole-bridging order — and hence final vertex/index ordering — varies.
+
+Fix: extended `Node: Comparable` to a strict total order (x, then y, then vertex index i). All 17 tests pass.
+
+Note: this should be verified against the Vector#3 repro (`for i in (seq 1 20); swift test; end`) before fully closing.
+
 ---
