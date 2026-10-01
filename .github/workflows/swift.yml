@@ -31,13 +31,9 @@ jobs:
     runs-on: macos-26
     strategy:
       matrix:
-        include:
-          - name: iOS
-            sdk: iphoneos
-            triple: ios
-          - name: visionOS
-            sdk: xros
-            triple: xros
+        destination:
+          - "generic/platform=iOS"
+          - "generic/platform=visionOS"
     steps:
       - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
@@ -45,5 +41,11 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - name: Trust plugins
         run: defaults write com.apple.dt.Xcode IDESkipPackagePluginFingerprintValidation -bool YES
-      - name: Build (${{ matrix.name }})
-        run: swift build -v --sdk "$(xcrun --sdk ${{ matrix.sdk }} --show-sdk-path)" --triple "arm64-apple-${{ matrix.triple }}$(xcrun --sdk ${{ matrix.sdk }} --show-sdk-version)"
+      - name: Build (${{ matrix.destination }})
+        run: |
+          xcodebuild build \
+            -scheme SwiftEarcut-Package \
+            -destination '${{ matrix.destination }}' \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO
